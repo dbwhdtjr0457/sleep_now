@@ -1,6 +1,7 @@
 import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
 import AccelerometerRecord from "./AccelerometerRecord";
 import GyroscopeRecord from "./GyroscopeRecord";
+import LightSensorRecord from "./LightSensorRecord";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -14,7 +15,7 @@ export default function App() {
       >
         <AccelerometerRecord SCREEN_WIDTH={SCREEN_WIDTH} />
         <GyroscopeRecord SCREEN_WIDTH={SCREEN_WIDTH} />
-        <AccelerometerRecord SCREEN_WIDTH={SCREEN_WIDTH} />
+        <LightSensorRecord SCREEN_WIDTH={SCREEN_WIDTH} />
         <AccelerometerRecord SCREEN_WIDTH={SCREEN_WIDTH} />
       </ScrollView>
     </View>
