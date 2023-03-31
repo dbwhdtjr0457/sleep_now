@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Gyroscope } from "expo-sensors";
+import LineChartTimeLapse from "./LineChartTimeLapse";
 
 export default function GyroscopeRecord(props) {
   const [{ x, y, z }, setData] = useState({ x: 0, y: 0, z: 0 });
   const [subscription, setSubscription] = useState(null);
+  const [recordX, setRecordX] = useState(new Array(20).fill(0));
+  const [recordY, setRecordY] = useState(new Array(20).fill(0));
+  const [recordZ, setRecordZ] = useState(new Array(20).fill(0));
 
   const _slow = () => {
     Gyroscope.setUpdateInterval(1000);
@@ -17,6 +21,9 @@ export default function GyroscopeRecord(props) {
     setSubscription(
       Gyroscope.addListener((gyroscopeData) => {
         setData(gyroscopeData);
+        setRecordX((recordX) => [...recordX.slice(1), gyroscopeData.x]);
+        setRecordY((recordY) => [...recordY.slice(1), gyroscopeData.y]);
+        setRecordZ((recordZ) => [...recordZ.slice(1), gyroscopeData.z]);
       })
     );
   };
@@ -27,6 +34,7 @@ export default function GyroscopeRecord(props) {
   };
 
   useEffect(() => {
+    _slow();
     _unsubscribe();
     return () => _unsubscribe();
   }, []);
@@ -37,6 +45,7 @@ export default function GyroscopeRecord(props) {
       <Text style={styles(props).text}>x: {x}</Text>
       <Text style={styles(props).text}>y: {y}</Text>
       <Text style={styles(props).text}>z: {z}</Text>
+      <LineChartTimeLapse dataX={recordX} dataY={recordY} dataZ={recordZ} />
       <View style={styles(props).buttonContainer}>
         <TouchableOpacity
           onPress={subscription ? _unsubscribe : _subscribe}

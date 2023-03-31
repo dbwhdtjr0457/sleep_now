@@ -16,7 +16,6 @@ export default function App() {
         <AccelerometerRecord SCREEN_WIDTH={SCREEN_WIDTH} />
         <GyroscopeRecord SCREEN_WIDTH={SCREEN_WIDTH} />
         <LightSensorRecord SCREEN_WIDTH={SCREEN_WIDTH} />
-        <AccelerometerRecord SCREEN_WIDTH={SCREEN_WIDTH} />
       </ScrollView>
     </View>
   );

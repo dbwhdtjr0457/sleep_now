@@ -7,14 +7,15 @@ import {
   Platform,
 } from "react-native";
 import { LightSensor } from "expo-sensors";
+import LineChartTimeLapse from "./LineChartTimeLapse";
 
 export default function LightSensorRecord(props) {
   const [{ illuminance: lux }, setData] = useState({ lux: 0 });
   const [subscription, setSubscription] = useState(null);
+  const [record, setRecord] = useState(new Array(20).fill(0));
 
   useEffect(() => {
     _unsubscribe();
-
     return () => _unsubscribe();
   }, []);
 
@@ -30,6 +31,10 @@ export default function LightSensorRecord(props) {
     setSubscription(
       LightSensor.addListener((lightSensorData) => {
         setData(lightSensorData);
+        setRecord((record) => [
+          ...record.slice(1),
+          lightSensorData.illuminance,
+        ]);
       })
     );
   };
@@ -46,6 +51,7 @@ export default function LightSensorRecord(props) {
         lux:{" "}
         {Platform.OS === "android" ? `${lux}` : `Only available on Android`}
       </Text>
+      <LineChartTimeLapse data={record} />
       <View style={styles(props).buttonContainer}>
         <TouchableOpacity onPress={_toggle} style={styles(props).button}>
           <Text>Toggle</Text>
