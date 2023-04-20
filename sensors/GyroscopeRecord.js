@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Gyroscope } from "expo-sensors";
-import LineChartTimeLapse from "./LineChartTimeLapse";
 
 export default function GyroscopeRecord(props) {
   const [{ x, y, z }, setData] = useState({ x: 0, y: 0, z: 0 });
@@ -33,9 +32,17 @@ export default function GyroscopeRecord(props) {
     setSubscription(null);
   };
 
+  const _requestPermission = async () => {
+    const { status } = await Gyroscope.requestPermissionsAsync();
+    if (status !== "granted") {
+      alert("Permission to access light sensor was denied");
+    }
+  };
+
   useEffect(() => {
     _slow();
     _unsubscribe();
+    _requestPermission();
     return () => _unsubscribe();
   }, []);
 
@@ -45,7 +52,6 @@ export default function GyroscopeRecord(props) {
       <Text style={styles(props).text}>x: {x}</Text>
       <Text style={styles(props).text}>y: {y}</Text>
       <Text style={styles(props).text}>z: {z}</Text>
-      <LineChartTimeLapse dataX={recordX} dataY={recordY} dataZ={recordZ} />
       <View style={styles(props).buttonContainer}>
         <TouchableOpacity
           onPress={subscription ? _unsubscribe : _subscribe}

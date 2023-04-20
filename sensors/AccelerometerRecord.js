@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Accelerometer } from "expo-sensors";
-import LineChartTimeLapse from "./LineChartTimeLapse";
 
 export default function AccelerometerRecord(props) {
   const [{ x, y, z }, setData] = useState({ x: 0, y: 0, z: 0 });
@@ -28,6 +27,13 @@ export default function AccelerometerRecord(props) {
     );
   };
 
+  const _requestPermission = async () => {
+    const { status } = await Accelerometer.requestPermissionsAsync();
+    if (status !== "granted") {
+      alert("Permission to access light sensor was denied");
+    }
+  };
+
   const _unsubscribe = () => {
     subscription && subscription.remove();
     setSubscription(null);
@@ -36,6 +42,7 @@ export default function AccelerometerRecord(props) {
   useEffect(() => {
     _slow();
     _unsubscribe();
+    _requestPermission();
     return () => _unsubscribe();
   }, []);
 
@@ -47,7 +54,6 @@ export default function AccelerometerRecord(props) {
       <Text style={styles(props).text}>x: {x}</Text>
       <Text style={styles(props).text}>y: {y}</Text>
       <Text style={styles(props).text}>z: {z}</Text>
-      <LineChartTimeLapse dataX={recordX} dataY={recordY} dataZ={recordZ} />
       <View style={styles(props).buttonContainer}>
         <TouchableOpacity
           onPress={subscription ? _unsubscribe : _subscribe}

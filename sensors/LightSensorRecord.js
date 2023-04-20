@@ -7,17 +7,11 @@ import {
   Platform,
 } from "react-native";
 import { LightSensor } from "expo-sensors";
-import LineChartTimeLapse from "./LineChartTimeLapse";
 
 export default function LightSensorRecord(props) {
   const [{ illuminance: lux }, setData] = useState({ lux: 0 });
   const [subscription, setSubscription] = useState(null);
   const [record, setRecord] = useState(new Array(20).fill(0));
-
-  useEffect(() => {
-    _unsubscribe();
-    return () => _unsubscribe();
-  }, []);
 
   const _toggle = () => {
     if (subscription) {
@@ -44,6 +38,19 @@ export default function LightSensorRecord(props) {
     setSubscription(null);
   };
 
+  const _requestPermission = async () => {
+    const { status } = await LightSensor.requestPermissionsAsync();
+    if (status !== "granted") {
+      alert("Permission to access light sensor was denied");
+    }
+  };
+
+  useEffect(() => {
+    _unsubscribe();
+    _requestPermission();
+    return () => _unsubscribe();
+  }, []);
+
   return (
     <View style={styles(props).sensor}>
       <Text style={styles(props).text}>Light Sensor:</Text>
@@ -51,10 +58,17 @@ export default function LightSensorRecord(props) {
         lux:{" "}
         {Platform.OS === "android" ? `${lux}` : `Only available on Android`}
       </Text>
-      <LineChartTimeLapse data={record} />
       <View style={styles(props).buttonContainer}>
         <TouchableOpacity onPress={_toggle} style={styles(props).button}>
           <Text>Toggle</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles(props).buttonContainer}>
+        <TouchableOpacity
+          onPress={_requestPermission}
+          style={styles(props).button}
+        >
+          <Text>Request Permission</Text>
         </TouchableOpacity>
       </View>
     </View>
