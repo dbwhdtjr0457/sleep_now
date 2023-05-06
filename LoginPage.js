@@ -6,17 +6,32 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  AppState,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { auth, createUser, signInUser, signOutUser } from "./firebaseConfig";
 
-const LoginPage = (props) => {
+export const LoginPage = (props) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [isLogin, setIsLogin] = useState(false);
 
   useEffect(() => {
+    AsyncStorage.getItem("userData").then((data) => {
+      console.log(data);
+      if (data) {
+        const userData = JSON.parse(data);
+        setEmail(userData.email);
+        setPassword(userData.password);
+        setIsLogin(userData.isLogin);
+        signInUser(auth, userData.email, userData.password).catch((err) => {
+          setError(err.message);
+          setIsLogin(false);
+        });
+      }
+    });
     auth.onAuthStateChanged((user) => {
       if (user) {
         setIsLogin(true);
@@ -37,26 +52,48 @@ const LoginPage = (props) => {
     }
   }, [error]);
 
+  useEffect(() => {
+    if (isLogin) {
+      AsyncStorage.setItem(
+        "userData",
+        JSON.stringify({
+          isLogin: isLogin,
+          email: email,
+          password: password,
+        })
+      );
+    } else {
+      AsyncStorage.removeItem("userData");
+    }
+  }, [isLogin]);
+
   return (
     <View style={styles(props).contentContainer}>
       <Text>Login Page</Text>
-      {isLogin ? <Text>Logged In</Text> : <Text>Not Logged In</Text>}
-      <TextInput
-        style={styles(props).input}
-        placeholder="Email"
-        inputMode="email"
-        onChange={(e) => {
-          setEmail(e.nativeEvent.text);
-        }}
-      />
-      <TextInput
-        style={styles(props).input}
-        placeholder="Password"
-        secureTextEntry
-        onChange={(e) => {
-          setPassword(e.nativeEvent.text);
-        }}
-      />
+      {isLogin ? (
+        <Text>Logged In</Text>
+      ) : (
+        <View>
+          <Text>Not Logged In</Text>
+          <TextInput
+            style={styles(props).input}
+            placeholder="Email"
+            inputMode="email"
+            onChange={(e) => {
+              setEmail(e.nativeEvent.text);
+            }}
+          />
+          <TextInput
+            style={styles(props).input}
+            placeholder="Password"
+            secureTextEntry
+            onChange={(e) => {
+              setPassword(e.nativeEvent.text);
+            }}
+          />
+        </View>
+      )}
+
       <TouchableOpacity
         style={styles(props).login}
         onPress={() => {
@@ -74,13 +111,21 @@ const LoginPage = (props) => {
       </TouchableOpacity>
       <TouchableOpacity
         onPress={async () => {
-          console.log("Sign Up");
           createUser(auth, email, password).catch((err) => {
             setError(err.message);
           });
         }}
       >
         <Text>Sign Up</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => {
+          AsyncStorage.getItem("userData").then((data) => {
+            Alert.alert("AsyncStorage", data);
+          });
+        }}
+      >
+        <Text>check AsyncStorage</Text>
       </TouchableOpacity>
     </View>
   );
@@ -108,5 +153,3 @@ const styles = (props) =>
       width: 200,
     },
   });
-
-export default LoginPage;

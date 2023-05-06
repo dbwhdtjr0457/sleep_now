@@ -10,8 +10,11 @@
   },
   "dependencies": {
     "@expo/webpack-config": "^18.0.1",
+    "@react-native-async-storage/async-storage": "1.17.11",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",
+    "@supersami/rn-foreground-service": "^2.1.0",
+    "@voximplant/react-native-foreground-service": "^3.0.2",
     "expo": "~48.0.9",
     "expo-application": "~5.1.1",
     "expo-auth-session": "~4.0.3",

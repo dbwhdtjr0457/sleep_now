@@ -3,12 +3,21 @@ import { StyleSheet, Text, View, Button } from "react-native";
 import * as Sensors from "expo-sensors";
 import * as Location from "expo-location";
 import useInterval from "./useInterval";
-import { getDatabase, ref, set, get } from "firebase/database";
+import { auth } from "./firebaseConfig";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
 
 export default function TotalInfo(props) {
-  const db = getDatabase();
-  const dbRef = ref(db, "test/joyoo");
-  const [totalInfo, setTotalInfo] = React.useState([]);
+  const db = getFirestore();
+
+  const addData = async (data) => {
+    try {
+      const docRef = await addDoc(collection(db, auth.currentUser.email), data);
+      console.log("Document written with ID: ", docRef.id);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
+  };
+
   const [accelerometerArray, setAccelerometerArray] = React.useState(
     new Array(20).fill({ x: 0, y: 0, z: 0 })
   );
@@ -26,17 +35,6 @@ export default function TotalInfo(props) {
     updateInterval();
     _subscribe();
     _requestLocationPermissions();
-    get(dbRef)
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          setTotalInfo(snapshot.val());
-        } else {
-          console.log("No data available");
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
     return () => {
       _unsubscribe();
     };
@@ -99,58 +97,43 @@ export default function TotalInfo(props) {
     console.log(lightSensorArray);
   };
 
-  const _updateTotalInfo = async (
+  const _updateTotalInfo = (
     accelerometerArray,
     gyroscopeArray,
     lightSensorArray,
     location
   ) => {
     const todayDate = new Date() + "";
-    setTotalInfo(
-      (totalInfo) =>
-        (totalInfo = [
-          ...totalInfo,
-          {
-            [todayDate]: {
-              date:
-                new Date().getFullYear() +
-                "-" +
-                (new Date().getMonth() + 1) +
-                "-" +
-                new Date().getDate(),
-              sensors: {
-                accelerometer: {
-                  x: accelerometerArray.reduce((a, b) => a + b.x, 0) / 20,
-                  y: accelerometerArray.reduce((a, b) => a + b.y, 0) / 20,
-                  z: accelerometerArray.reduce((a, b) => a + b.z, 0) / 20,
-                },
-                gyroscope: {
-                  x: gyroscopeArray.reduce((a, b) => a + b.x, 0) / 20,
-                  y: gyroscopeArray.reduce((a, b) => a + b.y, 0) / 20,
-                  z: gyroscopeArray.reduce((a, b) => a + b.z, 0) / 20,
-                },
-                lightSensor: {
-                  illuminance:
-                    lightSensorArray.reduce((a, b) => a + b.illuminance, 0) /
-                    20,
-                },
-                location: {
-                  city: location.city,
-                  name: location.name,
-                },
-              },
-            },
+    const timeNow = new Date();
+    addData({
+      [todayDate]: {
+        date: timeNow,
+        sensors: {
+          accelerometer: {
+            x: accelerometerArray.reduce((a, b) => a + b.x, 0) / 20,
+            y: accelerometerArray.reduce((a, b) => a + b.y, 0) / 20,
+            z: accelerometerArray.reduce((a, b) => a + b.z, 0) / 20,
           },
-        ])
-    );
-    if (totalInfo.length > 30) {
-      setTotalInfo((totalInfo) => totalInfo.slice(1));
-    }
-    set(dbRef, totalInfo);
+          gyroscope: {
+            x: gyroscopeArray.reduce((a, b) => a + b.x, 0) / 20,
+            y: gyroscopeArray.reduce((a, b) => a + b.y, 0) / 20,
+            z: gyroscopeArray.reduce((a, b) => a + b.z, 0) / 20,
+          },
+          lightSensor: {
+            illuminance:
+              lightSensorArray.reduce((a, b) => a + b.illuminance, 0) / 20,
+          },
+          location: {
+            city: location.city,
+            name: location.name,
+          },
+        },
+      },
+    });
   };
 
   useInterval(() => {
-    if (isRecording) {
+    if (auth.currentUser && isRecording) {
       _updateTotalInfo(
         accelerometerArray,
         gyroscopeArray,
@@ -186,7 +169,6 @@ export default function TotalInfo(props) {
       <Text style={styles(props).text}>Location: </Text>
       <Text style={styles(props).text}>{text}</Text>
       <Button title="Check Array" onPress={_checkArray} />
-      <Button title="Check Total Info" onPress={() => console.log(totalInfo)} />
       <Button
         title="toggle recording"
         onPress={() => setIsRecording(!isRecording)}

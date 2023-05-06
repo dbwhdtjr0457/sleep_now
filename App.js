@@ -1,57 +1,24 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Dimensions,
   ScrollView,
   StyleSheet,
-  View,
-  Button,
   Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithCredential,
-  onAuthStateChanged,
-} from "firebase/auth";
 import { NavigationContainer } from "@react-navigation/native";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { auth } from "./firebaseConfig";
 
-import { app, auth } from "./firebaseConfig";
 import TotalInfo from "./TotalInfo";
 import BackgroundFetchRecord from "./backgroundFetch";
-import LoginPage from "./LoginPage";
+import { LoginPage } from "./LoginPage";
+import { app } from "./firebaseConfig";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-WebBrowser.maybeCompleteAuthSession();
-
 export default function App() {
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId:
-      "515961940311-61j17l8h550tn169vgso77bqk1h1d3eo.apps.googleusercontent.com",
-    androidClientId:
-      "515961940311-giojge8do3kgptauht8m8h62a2fr70l9.apps.googleusercontent.com",
-    expoClientId:
-      "515961940311-61j17l8h550tn169vgso77bqk1h1d3eo.apps.googleusercontent.com",
-  });
-
-  React.useEffect(() => {
-    if (response?.type === "success") {
-      console.log(response.params);
-      const { id_token } = response.params;
-      const auth = getAuth();
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithCredential(auth, credential);
-    }
-  }, [response]);
-
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      const { uid, email, displayName, accessToken } = user;
-    }
-  });
-
   return (
     <NavigationContainer>
       <View style={styles.container}>
@@ -64,13 +31,13 @@ export default function App() {
           <TotalInfo SCREEN_WIDTH={SCREEN_WIDTH} />
           <BackgroundFetchRecord SCREEN_WIDTH={SCREEN_WIDTH} />
           <View style={styles.contentContainer}>
-            <Button
-              disabled={!request}
-              title="Login with Google"
+            <TouchableOpacity
               onPress={() => {
-                promptAsync();
+                console.log(auth.currentUser);
               }}
-            />
+            >
+              <Text>Log Current User</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </View>
